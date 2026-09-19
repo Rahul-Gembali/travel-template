@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { CONTINENTS } from '../data/citiesData';
 import { Compass, Sparkles, MapPin } from 'lucide-react';
+import heroArt from '../assets/horizons_hero_art.jpg';
 
 export default function HeroSection({ activeContinent, onSelectContinent }) {
   return (
@@ -42,7 +43,7 @@ export default function HeroSection({ activeContinent, onSelectContinent }) {
             {/* Inner Art Container */}
             <div className="relative w-full h-full rounded-[calc(1.75rem-6px)] sm:rounded-[calc(2rem-8px)] overflow-hidden bg-white border border-black/[0.05]">
               <img
-                src="/images/horizons_hero_art.jpg"
+                src={heroArt}
                 alt="Minimalist 2D and 3D architectural composition with terracotta arch, stone sphere, and ochre sun"
                 className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
               />
