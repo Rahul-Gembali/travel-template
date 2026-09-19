@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-alabaster: #F9F8F6;
+    --surface-stone: #F2F0EB;
+    --border-subtle: rgba(24, 24, 27, 0.08);
+    --text-carbon: #18181B;
+    --text-slate: #71717A;
+    --accent-terracotta: #C26D53;
+    --accent-sage: #4A5849;
+    --accent-aegean: #3E525E;
+    --accent-ochre: #B5884B;
+    --accent-plum: #5E434D;
+    --accent-umber: #382C26;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: #F9F8F6;
+    color: #18181B;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+  }
+
+  body {
+    background-color: #F9F8F6;
+    color: #18181B;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    position: relative;
+  }
+
+  #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F9F8F6;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #D5D2CA;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #B0ACA2;
+  }
+
+  /* Hide scrollbar for clean horizontal swipe lists */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Double-bezel nested container architecture */
+.double-bezel {
+  background: rgba(24, 24, 27, 0.03);
+  padding: 6px;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(24, 24, 27, 0.07);
+}
+
+.double-bezel-inner {
+  background: #FFFFFF;
+  border-radius: calc(1.5rem - 6px);
+  border: 1px solid rgba(24, 24, 27, 0.05);
+}
+
+/* Island Button with Button-in-Button pattern */
+.island-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem 0.5rem 1.25rem;
+  background-color: #18181B;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+}
+
+.island-btn:hover {
+  background-color: #27272A;
+}
+
+.island-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.15);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.island-btn:hover .island-btn-icon {
+  transform: translateX(2px) translateY(-1px);
+}
+
+/* Custom focus ring */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #18181B;
+  outline-offset: 2px;
+}
+
+/* Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
