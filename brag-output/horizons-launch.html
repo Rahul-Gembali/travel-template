@@ -238,19 +238,26 @@
     }
 
     // ----------------------------------------------------
-    // BEAT 2: 4B Cross-Hatching & Volumetric Hero Reveal (3.5s - 7.5s)
+    // BEAT 2: 4B Cross-Hatching & Volumetric Hero Reveal (3.2s - 7.4s)
     // ----------------------------------------------------
-    if (t >= 3.2 && t < 7.8) {
-      const b2 = clamp((t - 3.5) / 3.8, 0, 1);
+    if (t >= 3.2 && t < 7.4) {
+      const b2 = clamp((t - 3.5) / 3.2, 0, 1);
       const ease2 = easeOutCubic(b2);
 
-      if (images.hero) {
+      // Smooth fade-out before Beat 3 (Kyoto) begins
+      let beat2Alpha = 1.0;
+      if (t >= 6.8) {
+        beat2Alpha = clamp(1.0 - (t - 6.8) / 0.5, 0, 1);
+      }
+
+      if (images.hero && beat2Alpha > 0) {
         targetCtx.save();
+        targetCtx.globalAlpha = beat2Alpha;
         const heroSize = 540 + ease2 * 20;
         const hx = W / 2 - heroSize / 2;
         const hy = 220;
 
-        // Soft organic paper shadow (no hard stroke border)
+        // Soft organic paper shadow
         targetCtx.shadowColor = 'rgba(26, 25, 24, 0.08)';
         targetCtx.shadowBlur = 24;
         targetCtx.shadowOffsetY = 10;
@@ -259,7 +266,7 @@
       }
 
       // Display Typography Rub-Down: HORIZONS
-      if (t >= 4.2) {
+      if (t >= 4.2 && beat2Alpha > 0) {
         const typoP = clamp((t - 4.2) / 1.6, 0, 1);
         const springVal = springSettle(typoP, 140, 16);
         const typoY = 860 - (1 - springVal) * 20;
@@ -267,7 +274,7 @@
         targetCtx.save();
         targetCtx.textAlign = 'center';
         targetCtx.fillStyle = PAL.pencil8B;
-        targetCtx.globalAlpha = clamp(typoP * 1.5, 0, 1);
+        targetCtx.globalAlpha = clamp(typoP * 1.5, 0, 1) * beat2Alpha;
 
         // Editorial Serif Title
         targetCtx.font = 'italic 700 82px "Instrument Serif", Georgia, serif';
