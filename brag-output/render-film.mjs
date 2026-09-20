@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const htmlFile = path.join(__dirname, 'horizons-launch.html');
 const outDir = __dirname;
 const framesDir = path.join(outDir, 'frames');
+const soundtrackWav = path.join(outDir, 'soundtrack.wav');
 
 mkdirSync(framesDir, { recursive: true });
 
@@ -20,7 +21,11 @@ console.log('Launching headless Chrome...');
 const browser = await puppeteer.launch({
   executablePath: chromePath,
   headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--allow-file-access-from-files'
+  ]
 });
 
 try {
@@ -35,9 +40,9 @@ try {
 
   const targetUrl = pathToFileURL(htmlFile).href;
   console.log(`Loading: ${targetUrl}`);
-  await page.goto(targetUrl, { waitUntil: 'load' });
+  await page.goto(targetUrl, { waitUntil: 'networkidle0' });
 
-  await page.waitForFunction('window.__ready === true', { timeout: 30000 });
+  await page.waitForFunction('window.__ready === true', { timeout: 40000 });
 
   const meta = await page.evaluate(() => ({
     N: window.__NDRAW,
@@ -60,17 +65,11 @@ try {
     }
   }
 
-  // 2. Extract best poster frame (frame 470 has full title, live URL, and vermillion seal)
+  // 2. Extract best poster frame (frame 470)
   console.log('Extracting poster thumbnail (brag.jpg)...');
   const posterDataUrl = await page.evaluate(() => window.__frame(470));
   const posterBase64 = posterDataUrl.split(',')[1];
   writeFileSync(path.join(outDir, 'brag.jpg'), Buffer.from(posterBase64, 'base64'));
-
-  // 3. Extract procedural audio WAV
-  console.log('Synthesizing procedural ASMR audio (score.wav)...');
-  const wavBase64 = await page.evaluate(() => window.__wav());
-  const wavPath = path.join(outDir, 'score.wav');
-  writeFileSync(wavPath, Buffer.from(wavBase64, 'base64'));
 
   if (pageErrors.length > 0) {
     console.warn('Browser warnings/errors encountered:', pageErrors.join('\n'));
@@ -80,11 +79,10 @@ try {
   await browser.close();
 }
 
-// 4. Encode video with FFmpeg
+// 3. Encode video with FFmpeg
 console.log('Encoding video with FFmpeg...');
 const rawMp4 = path.join(outDir, 'brag-raw.mp4');
 const finalMp4 = path.join(outDir, 'brag.mp4');
-const wavFile = path.join(outDir, 'score.wav');
 
 // Step A: Encode PNG frames to MP4
 execFileSync('ffmpeg', [
@@ -98,12 +96,12 @@ execFileSync('ffmpeg', [
   rawMp4
 ], { stdio: 'inherit' });
 
-// Step B: Merge with procedural audio and bake poster as frame 0
+// Step B: Merge with master soundtrack
 execFileSync('ffmpeg', [
   '-v', 'error',
   '-y',
   '-i', rawMp4,
-  '-i', wavFile,
+  '-i', soundtrackWav,
   '-map', '0:v:0',
   '-map', '1:a:0',
   '-c:v', 'copy',

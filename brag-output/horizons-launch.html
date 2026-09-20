@@ -85,9 +85,6 @@
   <script>
   'use strict';
 
-  // ==========================================
-  // CONFIGURATION & CONSTANTS
-  // ==========================================
   const W = 1920;
   const H = 1080;
   const FPS = 24;
@@ -97,7 +94,7 @@
   window.__NDRAW = TOTAL_FRAMES;
   window.__fps = FPS;
   window.__size = { w: W, h: H };
-  window.__ready = true;
+  window.__ready = false;
 
   const canvas = document.getElementById('mainCanvas');
   const ctx = canvas.getContext('2d');
@@ -137,10 +134,9 @@
   }
   gctx.putImageData(imgData, 0, 0);
 
-  // Math & Easing Helpers (GSAP & Motion equivalents)
+  // Math & Easing Helpers
   function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
   function lerp(a, b, t) { return a + (b - a) * t; }
-  function easeOutQuad(t) { return t * (2 - t); }
   function easeOutCubic(t) { return (--t) * t * t + 1; }
   function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1; }
   function springSettle(t, stiffness = 120, damping = 14) {
@@ -150,54 +146,37 @@
     return 1 - Math.exp(-damping * t * 0.5) * Math.cos(omega * t);
   }
 
-  // Draw hand-drawn stroke with organic graphite jitter
-  function drawGraphiteStroke(c, points, color, width, opacity = 1.0, jitterAmp = 1.2) {
-    if (points.length < 2) return;
-    c.save();
-    c.strokeStyle = color;
-    c.lineWidth = width;
-    c.lineCap = 'round';
-    c.lineJoin = 'round';
-    c.globalAlpha = opacity;
-    c.beginPath();
-    c.moveTo(points[0][0], points[0][1]);
-    for (let i = 1; i < points.length; i++) {
-      const p = points[i];
-      const jx = (rnd() - 0.5) * jitterAmp;
-      const jy = (rnd() - 0.5) * jitterAmp;
-      c.lineTo(p[0] + jx, p[1] + jy);
-    }
-    c.stroke();
-    c.restore();
-  }
+  // Preload Master Artwork Assets
+  const images = {};
+  const assetNames = ['hero', 'kyoto', 'oaxaca', 'bergen'];
+  let loadedAssets = 0;
 
-  // Directional cross-hatch fill simulator
-  function drawCrossHatch(c, x, y, w, h, density = 0.5, angle = -Math.PI / 4, color = PAL.pencil4B, width = 1.0, alpha = 0.4) {
-    c.save();
-    c.beginPath();
-    c.rect(x, y, w, h);
-    c.clip();
-    c.strokeStyle = color;
-    c.lineWidth = width;
-    c.globalAlpha = alpha;
-    const step = 8 / density;
-    const diag = Math.hypot(w, h);
-    c.translate(x + w / 2, y + h / 2);
-    c.rotate(angle);
-    c.beginPath();
-    for (let i = -diag; i <= diag; i += step) {
-      c.moveTo(i, -diag);
-      c.lineTo(i + (rnd() - 0.5) * 2, diag);
-    }
-    c.stroke();
-    c.restore();
-  }
+  assetNames.forEach(name => {
+    const img = new Image();
+    img.src = 'assets/' + name + '.jpg';
+    img.onload = () => {
+      images[name] = img;
+      loadedAssets++;
+      if (loadedAssets === assetNames.length) {
+        window.__ready = true;
+        updateDisplay(0);
+      }
+    };
+    img.onerror = () => {
+      console.warn('Could not load asset: assets/' + name + '.jpg');
+      loadedAssets++;
+      if (loadedAssets === assetNames.length) {
+        window.__ready = true;
+        updateDisplay(0);
+      }
+    };
+  });
 
   // ==========================================
   // MASTER RENDER SCENE FUNCTION
   // ==========================================
   function renderFrame(targetCtx, frameIndex) {
-    const t = frameIndex / FPS; // time in seconds (0.0 to 20.0)
+    const t = frameIndex / FPS;
     seed = (frameIndex * 997 + 101) % 2147483647;
 
     // Background paper substrate
@@ -207,9 +186,9 @@
 
     // Camera Drift (Subtle Steadicam float)
     targetCtx.save();
-    const camDriftX = Math.sin(t * 0.4) * 8;
-    const camDriftY = Math.cos(t * 0.3) * 6;
-    const camScale = 1.0 + Math.sin(t * 0.2) * 0.015;
+    const camDriftX = Math.sin(t * 0.35) * 6;
+    const camDriftY = Math.cos(t * 0.25) * 5;
+    const camScale = 1.0 + Math.sin(t * 0.2) * 0.012;
     targetCtx.translate(W / 2, H / 2);
     targetCtx.scale(camScale, camScale);
     targetCtx.translate(-W / 2 + camDriftX, -H / 2 + camDriftY);
@@ -217,9 +196,9 @@
     // ----------------------------------------------------
     // BEAT 1: The Blank Sheet & 2H Contour Wireframe (0.0s - 3.5s)
     // ----------------------------------------------------
-    if (t < 4.0) {
-      const beat1Progress = clamp(t / 3.2, 0, 1);
-      const ease1 = easeOutCubic(beat1Progress);
+    if (t < 3.8) {
+      const b1 = clamp(t / 3.2, 0, 1);
+      const ease1 = easeOutCubic(b1);
 
       // Faint 2H Technical Drafting Grid
       targetCtx.strokeStyle = PAL.draftGrid;
@@ -237,103 +216,60 @@
       // Technical Telemetry Annotations
       targetCtx.fillStyle = 'rgba(74, 71, 67, 0.45)';
       targetCtx.font = '12px "JetBrains Mono", monospace';
-      targetCtx.fillText('FIG. 01 — ARCHITECTURAL ARCH / LAT. 35.0116° N / 640GSM COTTON', 90, 80);
-      targetCtx.fillText('SCALE: 1:1 MONOGRAPH / BEAT: CONTOUR DISCOVERY', 90, 102);
+      targetCtx.fillText('FIG. 01 — ARCHITECTURAL ARCH / LAT. 35.0116° N / 640GSM COTTON RAG', 90, 80);
+      targetCtx.fillText('SCALE: 1:1 MONOGRAPH / DRAWING PASS: 2H CONTOUR', 90, 102);
 
-      // 2H Contour Wireframe Architecture
-      const archCenterX = W / 2;
-      const archCenterY = 560;
-      const archRadius = 240;
+      // Render Hero Architectural Artwork with progressive sketch mask
+      if (images.hero) {
+        targetCtx.save();
+        const heroSize = 520;
+        const hx = W / 2 - heroSize / 2;
+        const hy = 260;
 
-      // Draw arch outline progressively
-      targetCtx.save();
-      targetCtx.strokeStyle = PAL.pencil2H;
-      targetCtx.lineWidth = 2.0;
-      targetCtx.beginPath();
-      targetCtx.arc(archCenterX, archCenterY, archRadius, Math.PI, Math.PI + Math.PI * ease1, false);
-      targetCtx.stroke();
-
-      // Inner arch
-      targetCtx.beginPath();
-      targetCtx.arc(archCenterX, archCenterY, archRadius * 0.75, Math.PI, Math.PI + Math.PI * ease1, false);
-      targetCtx.stroke();
-
-      // Horizontal Baseline & Pillars
-      if (ease1 > 0.4) {
-        const pillarP = (ease1 - 0.4) / 0.6;
+        // Clip revealing from bottom-to-top with curved arch
         targetCtx.beginPath();
-        targetCtx.moveTo(archCenterX - archRadius, archCenterY);
-        targetCtx.lineTo(archCenterX - archRadius, archCenterY + 220 * pillarP);
-        targetCtx.moveTo(archCenterX + archRadius, archCenterY);
-        targetCtx.lineTo(archCenterX + archRadius, archCenterY + 220 * pillarP);
-        targetCtx.moveTo(archCenterX - archRadius * 0.75, archCenterY);
-        targetCtx.lineTo(archCenterX - archRadius * 0.75, archCenterY + 220 * pillarP);
-        targetCtx.moveTo(archCenterX + archRadius * 0.75, archCenterY);
-        targetCtx.lineTo(archCenterX + archRadius * 0.75, archCenterY + 220 * pillarP);
-        targetCtx.stroke();
-      }
+        targetCtx.rect(hx, hy + heroSize * (1 - ease1), heroSize, heroSize * ease1);
+        targetCtx.clip();
 
-      // Rising Sun Rays
-      if (ease1 > 0.6) {
-        const rayP = (ease1 - 0.6) / 0.4;
-        for (let a = 0; a < 7; a++) {
-          const angle = Math.PI + (a + 1) * (Math.PI / 8);
-          const r1 = archRadius * 0.82;
-          const r2 = r1 + 50 * rayP;
-          targetCtx.beginPath();
-          targetCtx.moveTo(archCenterX + Math.cos(angle) * r1, archCenterY + Math.sin(angle) * r1);
-          targetCtx.lineTo(archCenterX + Math.cos(angle) * r2, archCenterY + Math.sin(angle) * r2);
-          targetCtx.stroke();
-        }
+        targetCtx.globalAlpha = 0.35 + ease1 * 0.65;
+        targetCtx.drawImage(images.hero, hx, hy, heroSize, heroSize);
+        targetCtx.restore();
+
+        // 2H Contour Framing Box
+        targetCtx.strokeStyle = PAL.pencil2H;
+        targetCtx.lineWidth = 1.5;
+        targetCtx.strokeRect(hx - 10, hy - 10, heroSize + 20, heroSize + 20);
       }
-      targetCtx.restore();
     }
 
     // ----------------------------------------------------
-    // BEAT 2: 4B Cross-Hatching & Volumetric Mass (3.5s - 7.5s)
+    // BEAT 2: 4B Cross-Hatching & Volumetric Hero Reveal (3.5s - 7.5s)
     // ----------------------------------------------------
-    if (t >= 3.0 && t < 7.8) {
-      const beat2Progress = clamp((t - 3.2) / 3.8, 0, 1);
-      const ease2 = easeOutCubic(beat2Progress);
-      const archCenterX = W / 2;
-      const archCenterY = 540;
-      const archRadius = 240;
+    if (t >= 3.2 && t < 7.8) {
+      const b2 = clamp((t - 3.5) / 3.8, 0, 1);
+      const ease2 = easeOutCubic(b2);
 
-      // 4B Diagonal Cross-Hatching
-      drawCrossHatch(targetCtx, archCenterX - archRadius, archCenterY - archRadius, archRadius * 2, archRadius + 220, 0.6 * ease2, -Math.PI / 4, PAL.pencil4B, 1.2, 0.35 * ease2);
-
-      // Deep 8B Grease Carbon Mass inside arch
-      if (ease2 > 0.3) {
-        const shadowAlpha = clamp((ease2 - 0.3) / 0.7, 0, 0.85);
+      if (images.hero) {
         targetCtx.save();
-        targetCtx.fillStyle = PAL.pencil8B;
-        targetCtx.globalAlpha = shadowAlpha * 0.8;
-        targetCtx.beginPath();
-        targetCtx.arc(archCenterX, archCenterY, archRadius * 0.75, Math.PI, 0, false);
-        targetCtx.lineTo(archCenterX + archRadius * 0.75, archCenterY + 220);
-        targetCtx.lineTo(archCenterX - archRadius * 0.75, archCenterY + 220);
-        targetCtx.closePath();
-        targetCtx.fill();
+        const heroSize = 540 + ease2 * 20;
+        const hx = W / 2 - heroSize / 2;
+        const hy = 220;
+
+        // Draw Full Architectural Hero Art
+        targetCtx.drawImage(images.hero, hx, hy, heroSize, heroSize);
+
+        // Tactile paper frame border
+        targetCtx.strokeStyle = PAL.pencil8B;
+        targetCtx.lineWidth = 2.0;
+        targetCtx.strokeRect(hx - 6, hy - 6, heroSize + 12, heroSize + 12);
         targetCtx.restore();
       }
-
-      // Strong contour strokes
-      targetCtx.save();
-      targetCtx.strokeStyle = PAL.pencil8B;
-      targetCtx.lineWidth = 3.5;
-      targetCtx.beginPath();
-      targetCtx.arc(archCenterX, archCenterY, archRadius, Math.PI, 0, false);
-      targetCtx.lineTo(archCenterX + archRadius, archCenterY + 220);
-      targetCtx.moveTo(archCenterX - archRadius, archCenterY);
-      targetCtx.lineTo(archCenterX - archRadius, archCenterY + 220);
-      targetCtx.stroke();
-      targetCtx.restore();
 
       // Display Typography Rub-Down: HORIZONS
       if (t >= 4.2) {
         const typoP = clamp((t - 4.2) / 1.6, 0, 1);
         const springVal = springSettle(typoP, 140, 16);
-        const typoY = 320 - (1 - springVal) * 25;
+        const typoY = 860 - (1 - springVal) * 20;
 
         targetCtx.save();
         targetCtx.textAlign = 'center';
@@ -341,30 +277,29 @@
         targetCtx.globalAlpha = clamp(typoP * 1.5, 0, 1);
 
         // Editorial Serif Title
-        targetCtx.font = 'italic 700 86px "Instrument Serif", Georgia, serif';
+        targetCtx.font = 'italic 700 82px "Instrument Serif", Georgia, serif';
         targetCtx.fillText('H O R I Z O N S', W / 2, typoY);
 
         // Subtitle
-        targetCtx.font = '400 16px "JetBrains Mono", monospace';
+        targetCtx.font = '400 15px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.pencil4B;
         targetCtx.letterSpacing = '0.35em';
-        targetCtx.fillText('WHERE STILLNESS MEETS THE HORIZON', W / 2, typoY + 54);
+        targetCtx.fillText('WHERE STILLNESS MEETS THE HORIZON', W / 2, typoY + 48);
 
         // Badges
         if (typoP > 0.5) {
           targetCtx.font = '500 12px "JetBrains Mono", monospace';
           targetCtx.fillStyle = PAL.ochreAccent;
-          targetCtx.fillText('MINDFUL STAYS · LIVING MONOGRAPHS · SLOW TIME', W / 2, typoY + 88);
+          targetCtx.fillText('MINDFUL STAYS · LIVING MONOGRAPHS · SLOW TIME', W / 2, typoY + 80);
         }
         targetCtx.restore();
       }
     }
 
     // ----------------------------------------------------
-    // BEAT 3: Hand-Drawn Journey across 3 Cities (7.5s - 14.5s)
+    // BEAT 3: Hand-Drawn Journey across 3 Masterpieces (7.5s - 14.5s)
     // ----------------------------------------------------
     if (t >= 7.3 && t < 14.8) {
-      // 3 Sub-chapters: Kyoto (7.5-9.8s), Oaxaca (9.8-12.1s), Bergen (12.1-14.5s)
       targetCtx.save();
 
       if (t < 9.9) {
@@ -372,166 +307,110 @@
         const kp = clamp((t - 7.5) / 2.0, 0, 1);
         const kEase = easeOutCubic(kp);
 
-        targetCtx.fillStyle = PAL.pencil8B;
-        targetCtx.font = 'italic 600 52px "Instrument Serif", Georgia, serif';
-        targetCtx.fillText('京都 · KYOTO', 180, 260);
+        if (images.kyoto) {
+          // Cinematic slow pan across the 5-story pagoda
+          const kw = 1120;
+          const kh = 630;
+          const kx = 120;
+          const ky = 260 - (1 - kEase) * 25;
 
-        targetCtx.font = '400 14px "JetBrains Mono", monospace';
+          targetCtx.save();
+          targetCtx.drawImage(images.kyoto, kx, ky, kw, kh);
+          targetCtx.strokeStyle = PAL.pencil8B;
+          targetCtx.lineWidth = 1.5;
+          targetCtx.strokeRect(kx, ky, kw, kh);
+          targetCtx.restore();
+        }
+
+        // Editorial Typography & Sumi-e Seal
+        targetCtx.fillStyle = PAL.pencil8B;
+        targetCtx.font = 'italic 700 58px "Instrument Serif", Georgia, serif';
+        targetCtx.fillText('京都 · KYOTO', 1300, 420);
+
+        targetCtx.font = '500 14px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.pencil4B;
-        targetCtx.fillText('CITADELS OF MINDFUL STILLNESS · CEDAR MACHIYA & MOSS TEMPLES', 180, 296);
+        targetCtx.fillText('CITADELS OF MINDFUL STILLNESS', 1300, 470);
+        targetCtx.fillText('CEDAR MACHIYA & MOSS TEMPLES', 1300, 495);
 
-        // Machiya wooden eave hand-drawn architecture
-        targetCtx.strokeStyle = PAL.pencil8B;
-        targetCtx.lineWidth = 3.0;
-        targetCtx.beginPath();
-        // Roof eave curve
-        targetCtx.moveTo(180, 480);
-        targetCtx.quadraticCurveTo(550, 420, 920 * kEase + 180 * (1 - kEase), 470);
-        targetCtx.stroke();
-
-        // Eave rafters
-        targetCtx.lineWidth = 1.5;
-        targetCtx.strokeStyle = PAL.pencil4B;
-        for (let rx = 220; rx < 880; rx += 28) {
-          if (rx < 180 + 740 * kEase) {
-            targetCtx.beginPath();
-            targetCtx.moveTo(rx, 465);
-            targetCtx.lineTo(rx - 15, 520);
-            targetCtx.stroke();
-          }
-        }
-
-        // Bamboo Grove Stipple & Stalks
-        targetCtx.strokeStyle = PAL.pencil4B;
-        targetCtx.lineWidth = 4.0;
-        for (let b = 0; b < 6; b++) {
-          const bx = 1100 + b * 110;
-          if (kEase > b * 0.15) {
-            targetCtx.beginPath();
-            targetCtx.moveTo(bx, 750);
-            targetCtx.lineTo(bx + (rnd() - 0.5) * 8, 300);
-            targetCtx.stroke();
-            // Nodes
-            targetCtx.lineWidth = 6.0;
-            targetCtx.beginPath();
-            targetCtx.moveTo(bx - 12, 440); targetCtx.lineTo(bx + 12, 440);
-            targetCtx.moveTo(bx - 12, 580); targetCtx.lineTo(bx + 12, 580);
-            targetCtx.stroke();
-            targetCtx.lineWidth = 4.0;
-          }
-        }
-
-        // Sumi-e Kasure Calligraphic Accent
-        targetCtx.fillStyle = PAL.pencil8B;
-        targetCtx.font = '700 84px serif';
-        targetCtx.globalAlpha = 0.85 * kEase;
-        targetCtx.fillText('静', 1580, 420);
-        targetCtx.font = '13px "JetBrains Mono", monospace';
-        targetCtx.fillText('[ SEI — QUIETUDE ]', 1540, 460);
+        // Kanji Stamp
+        targetCtx.fillStyle = PAL.terracottaHanko;
+        targetCtx.font = '700 72px serif';
+        targetCtx.fillText('静', 1300, 620);
+        targetCtx.font = '12px "JetBrains Mono", monospace';
+        targetCtx.fillStyle = PAL.pencil4B;
+        targetCtx.fillText('[ SEI — SACRED QUIETUDE ]', 1300, 660);
       }
       else if (t < 12.2) {
         // --- CHAPTER 2: OAXACA (9.8s - 12.1s) ---
         const op = clamp((t - 9.8) / 2.0, 0, 1);
         const oEase = easeOutCubic(op);
 
-        targetCtx.fillStyle = PAL.pencil8B;
-        targetCtx.font = 'italic 600 52px "Instrument Serif", Georgia, serif';
-        targetCtx.fillText('OAXACA DE JUÁREZ', 180, 260);
+        if (images.oaxaca) {
+          // Colonial Courtyard Arches & Smoking Comal
+          const ow = 1120;
+          const oh = 630;
+          const ox = 120;
+          const oy = 260 - (1 - oEase) * 25;
 
-        targetCtx.font = '400 14px "JetBrains Mono", monospace';
-        targetCtx.fillStyle = PAL.pencil4B;
-        targetCtx.fillText('EARTHEN SMOKE & COPAL RESIN · ARTISAN CLAY GUILDS', 180, 296);
-
-        // Hand-drawn Terracotta Arch
-        targetCtx.strokeStyle = PAL.terracottaHanko;
-        targetCtx.lineWidth = 3.5;
-        targetCtx.beginPath();
-        targetCtx.arc(520, 560, 180, Math.PI, Math.PI + Math.PI * oEase, false);
-        targetCtx.stroke();
-
-        // Clay Comal & Copal Smoke Plume (Nijimi Bleed)
-        targetCtx.strokeStyle = PAL.pencil8B;
-        targetCtx.lineWidth = 3.0;
-        targetCtx.beginPath();
-        targetCtx.ellipse(1120, 620, 220 * oEase, 60 * oEase, 0, 0, Math.PI * 2);
-        targetCtx.stroke();
-
-        // Curling smoke plume
-        targetCtx.save();
-        targetCtx.strokeStyle = 'rgba(74, 71, 67, 0.4)';
-        targetCtx.lineWidth = 4.0;
-        targetCtx.beginPath();
-        targetCtx.moveTo(1120, 600);
-        targetCtx.bezierCurveTo(1080, 520, 1160, 440, 1100, 360 * (2 - oEase));
-        targetCtx.stroke();
-        targetCtx.restore();
-
-        // Agave Specimen Sketch
-        targetCtx.strokeStyle = PAL.pencil4B;
-        targetCtx.lineWidth = 2.0;
-        for (let l = -3; l <= 3; l++) {
-          targetCtx.beginPath();
-          targetCtx.moveTo(1560, 680);
-          targetCtx.quadraticCurveTo(1560 + l * 45, 520, 1560 + l * 80 * oEase, 460);
-          targetCtx.stroke();
+          targetCtx.save();
+          targetCtx.drawImage(images.oaxaca, ox, oy, ow, oh);
+          targetCtx.strokeStyle = PAL.pencil8B;
+          targetCtx.lineWidth = 1.5;
+          targetCtx.strokeRect(ox, oy, ow, oh);
+          targetCtx.restore();
         }
+
+        // Editorial Typography
+        targetCtx.fillStyle = PAL.pencil8B;
+        targetCtx.font = 'italic 700 58px "Instrument Serif", Georgia, serif';
+        targetCtx.fillText('OAXACA DE JUÁREZ', 1300, 420);
+
+        targetCtx.font = '500 14px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.pencil4B;
-        targetCtx.font = '12px "JetBrains Mono", monospace';
-        targetCtx.fillText('SPECIMEN: AGAVE POTATORUM / CLAY KILN 980°C', 1380, 720);
+        targetCtx.fillText('EARTHEN SMOKE & COPAL RESIN', 1300, 470);
+        targetCtx.fillText('ARTISAN STONE & CLAY GUILDS', 1300, 495);
+
+        // Botanical Agave Specimen Telemetry
+        targetCtx.font = '13px "JetBrains Mono", monospace';
+        targetCtx.fillStyle = PAL.terracottaHanko;
+        targetCtx.fillText('SPECIMEN: AGAVE POTATORUM', 1300, 610);
+        targetCtx.fillText('KILN FIRING: 980°C / RED EARTH', 1300, 635);
       }
       else {
         // --- CHAPTER 3: BERGEN (12.1s - 14.5s) ---
         const bp = clamp((t - 12.1) / 2.0, 0, 1);
         const bEase = easeOutCubic(bp);
 
+        if (images.bergen) {
+          // Historic Hanseatic Timber Wharf & Fjord Water
+          const bw = 1120;
+          const bh = 630;
+          const bx = 120;
+          const by = 260 - (1 - bEase) * 25;
+
+          targetCtx.save();
+          targetCtx.drawImage(images.bergen, bx, by, bw, bh);
+          targetCtx.strokeStyle = PAL.pencil8B;
+          targetCtx.lineWidth = 1.5;
+          targetCtx.strokeRect(bx, by, bw, bh);
+          targetCtx.restore();
+        }
+
+        // Editorial Typography
         targetCtx.fillStyle = PAL.pencil8B;
-        targetCtx.font = 'italic 600 52px "Instrument Serif", Georgia, serif';
-        targetCtx.fillText('BERGEN · HANSEATIC FJORD', 180, 260);
+        targetCtx.font = 'italic 700 58px "Instrument Serif", Georgia, serif';
+        targetCtx.fillText('BERGEN · FJORD MIST', 1300, 420);
 
-        targetCtx.font = '400 14px "JetBrains Mono", monospace';
+        targetCtx.font = '500 14px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.pencil4B;
-        targetCtx.fillText('PINE TIMBER GABLES & MARITIME RAIN · 60.39° N', 180, 296);
+        targetCtx.fillText('HANSEATIC TIMBER WHARF', 1300, 470);
+        targetCtx.fillText('MARITIME RAIN & PINE RIDGES', 1300, 495);
 
-        // Pointed Hanseatic Gables
-        targetCtx.strokeStyle = PAL.pencil8B;
-        targetCtx.lineWidth = 3.0;
-        for (let g = 0; g < 4; g++) {
-          const gx = 260 + g * 220;
-          if (bEase > g * 0.2) {
-            targetCtx.beginPath();
-            targetCtx.moveTo(gx, 660);
-            targetCtx.lineTo(gx, 480);
-            targetCtx.lineTo(gx + 90, 360);
-            targetCtx.lineTo(gx + 180, 480);
-            targetCtx.lineTo(gx + 180, 660);
-            targetCtx.closePath();
-            targetCtx.stroke();
-            // Timber cross beams
-            drawCrossHatch(targetCtx, gx, 480, 180, 180, 0.4, -Math.PI / 4, PAL.pencil4B, 1.0, 0.25);
-          }
-        }
-
-        // Fjord Mountain Ridges in Distance
-        targetCtx.strokeStyle = PAL.pencil2H;
-        targetCtx.lineWidth = 2.0;
-        targetCtx.beginPath();
-        targetCtx.moveTo(1100, 620);
-        targetCtx.lineTo(1320, 380);
-        targetCtx.lineTo(1540, 490);
-        targetCtx.lineTo(1820, 320);
-        targetCtx.stroke();
-
-        // Vertical Rain Stipple
-        targetCtx.strokeStyle = 'rgba(74, 71, 67, 0.3)';
-        targetCtx.lineWidth = 1.2;
-        for (let r = 0; r < 40; r++) {
-          const rx = 1100 + rnd() * 700;
-          const ry = 300 + rnd() * 350;
-          targetCtx.beginPath();
-          targetCtx.moveTo(rx, ry);
-          targetCtx.lineTo(rx - 4, ry + 22);
-          targetCtx.stroke();
-        }
+        // Coordinates
+        targetCtx.font = '13px "JetBrains Mono", monospace';
+        targetCtx.fillStyle = PAL.ochreAccent;
+        targetCtx.fillText('LAT. 60.3929° N / 5.3241° E', 1300, 610);
+        targetCtx.fillText('PRECIPITATION: 240 DAYS / SLOW FOG', 1300, 635);
       }
 
       targetCtx.restore();
@@ -555,56 +434,57 @@
 
       // Inside Slate Inversion: Silver Dust & Luminous Chalk
       targetCtx.fillStyle = PAL.chalkHighlight;
-      targetCtx.font = 'italic 700 72px "Instrument Serif", Georgia, serif';
+      targetCtx.font = 'italic 700 76px "Instrument Serif", Georgia, serif';
       targetCtx.textAlign = 'center';
-      targetCtx.fillText('THE LIVING MONOGRAPH', W / 2, 280);
+      targetCtx.fillText('THE LIVING MONOGRAPH', W / 2, 260);
 
       targetCtx.font = '500 15px "JetBrains Mono", monospace';
       targetCtx.fillStyle = PAL.silverDust;
-      targetCtx.fillText('REAL-TIME WEATHER GAUGES · CURATED RETREATS · 6 CITADELS', W / 2, 330);
+      targetCtx.fillText('REAL-TIME WEATHER GAUGES · CURATED RETREATS · 6 GLOBAL CITADELS', W / 2, 315);
 
       // Bento Telemetry Cards (Minimalist-UI + Neo-Minimal 3D Hybrid)
       const cards = [
-        { city: 'KYOTO', temp: '18°C', desc: 'MOSS RAIN', pace: '0.4x' },
-        { city: 'OAXACA', temp: '24°C', desc: 'COPAL EMBERS', pace: '0.5x' },
-        { city: 'BERGEN', temp: '14°C', desc: 'FJORD MIST', pace: '0.3x' }
+        { city: 'KYOTO', temp: '18°C', desc: 'MOSS RAIN', pace: '0.4x', note: 'Zazen Morning' },
+        { city: 'OAXACA', temp: '24°C', desc: 'COPAL EMBERS', pace: '0.5x', note: 'Clay Guild' },
+        { city: 'BERGEN', temp: '14°C', desc: 'FJORD MIST', pace: '0.3x', note: 'Pine Sauna' }
       ];
 
       for (let ci = 0; ci < cards.length; ci++) {
-        const cx = W / 2 - 460 + ci * 320;
-        const cy = 420;
+        const cx = W / 2 - 480 + ci * 330;
+        const cy = 400;
         const c = cards[ci];
 
         targetCtx.strokeStyle = 'rgba(255,255,255,0.12)';
         targetCtx.lineWidth = 1;
-        targetCtx.strokeRect(cx, cy, 280, 360);
+        targetCtx.strokeRect(cx, cy, 300, 390);
 
         targetCtx.textAlign = 'left';
-        targetCtx.font = '600 20px "JetBrains Mono", monospace';
+        targetCtx.font = '600 22px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.chalkHighlight;
-        targetCtx.fillText(c.city, cx + 24, cy + 50);
+        targetCtx.fillText(c.city, cx + 28, cy + 54);
 
-        targetCtx.font = '300 48px "Instrument Serif", Georgia, serif';
-        targetCtx.fillText(c.temp, cx + 24, cy + 120);
+        targetCtx.font = '300 52px "Instrument Serif", Georgia, serif';
+        targetCtx.fillText(c.temp, cx + 28, cy + 130);
 
         targetCtx.font = '400 13px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.silverDust;
-        targetCtx.fillText('ATMOSPHERE: ' + c.desc, cx + 24, cy + 170);
-        targetCtx.fillText('TEMPO: ' + c.pace, cx + 24, cy + 200);
+        targetCtx.fillText('ATMOSPHERE: ' + c.desc, cx + 28, cy + 185);
+        targetCtx.fillText('TEMPO: ' + c.pace, cx + 28, cy + 215);
+        targetCtx.fillText('RECOMMENDED: ' + c.note, cx + 28, cy + 245);
 
         // Circular Dial
         targetCtx.strokeStyle = PAL.terracottaHanko;
-        targetCtx.lineWidth = 2;
+        targetCtx.lineWidth = 2.5;
         targetCtx.beginPath();
-        targetCtx.arc(cx + 140, cy + 280, 40, -Math.PI / 2, -Math.PI / 2 + Math.PI * 1.4 * invEase);
+        targetCtx.arc(cx + 150, cy + 320, 36, -Math.PI / 2, -Math.PI / 2 + Math.PI * 1.5 * invEase);
         targetCtx.stroke();
       }
 
-      // Silver dust motes floating in space
+      // Silver dust motes
       targetCtx.fillStyle = PAL.silverDust;
-      for (let p = 0; p < 35; p++) {
-        const px = (rnd() * W + t * 20) % W;
-        const py = (rnd() * H + t * 15) % H;
+      for (let p = 0; p < 40; p++) {
+        const px = (rnd() * W + t * 25) % W;
+        const py = (rnd() * H + t * 18) % H;
         targetCtx.fillRect(px, py, 2, 2);
       }
 
@@ -618,7 +498,7 @@
       const outroP = clamp((t - 17.5) / 2.2, 0, 1);
       const outEase = easeOutCubic(outroP);
 
-      // Re-establish warm bone paper substrate
+      // Warm bone paper substrate
       targetCtx.save();
       targetCtx.fillStyle = PAL.paperBase;
       targetCtx.globalAlpha = outEase;
@@ -712,118 +592,6 @@
   };
 
   // ==========================================
-  // PROCEDURAL ASMR AUDIO SYNTHESIS (WAV EXPORT)
-  // Generates 20.0s 44.1kHz 16-bit Mono PCM WAV
-  // ==========================================
-  window.__wav = function() {
-    const sampleRate = 44100;
-    const numSamples = Math.floor(sampleRate * DURATION);
-    const buffer = new ArrayBuffer(44 + numSamples * 2);
-    const view = new DataView(buffer);
-
-    // Write RIFF header
-    function writeString(offset, string) {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-      }
-    }
-
-    writeString(0, 'RIFF');
-    view.setUint32(4, 36 + numSamples * 2, true);
-    writeString(8, 'WAVE');
-    writeString(12, 'fmt ');
-    view.setUint32(16, 16, true);        // SubChunk1Size (16 for PCM)
-    view.setUint16(20, 1, true);         // AudioFormat (1 = PCM)
-    view.setUint16(22, 1, true);         // NumChannels (1 = Mono)
-    view.setUint32(24, sampleRate, true);// SampleRate
-    view.setUint32(28, sampleRate * 2, true); // ByteRate
-    view.setUint16(32, 2, true);         // BlockAlign
-    view.setUint16(34, 16, true);        // BitsPerSample
-    writeString(36, 'data');
-    view.setUint32(40, numSamples * 2, true);
-
-    // Audio DSP variables
-    let b0 = 0, b1 = 0, b2 = 0; // Pink noise state
-    let woodEnv1 = 0, woodEnv2 = 0;
-
-    for (let i = 0; i < numSamples; i++) {
-      const curTime = i / sampleRate;
-      let sample = 0;
-
-      // 1. Pink Noise Paper Tooth Body
-      const white = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + white * 0.0555179;
-      b1 = 0.99332 * b1 + white * 0.0750759;
-      b2 = 0.96900 * b2 + white * 0.1538520;
-      const pink = (b0 + b1 + b2 + white * 0.5362) * 0.035;
-      sample += pink * 0.25;
-
-      // 2. 2H Lead Glide (0.0s - 3.5s)
-      if (curTime < 3.5) {
-        const scratch = (Math.random() * 2 - 1) * Math.sin(curTime * 2800 * Math.PI * 2);
-        const env = Math.sin((curTime / 3.5) * Math.PI);
-        sample += scratch * env * 0.06;
-      }
-
-      // 3. 4B Cross-Hatch Scraping (3.5s - 7.5s)
-      if (curTime >= 3.5 && curTime < 7.5) {
-        const scrapeFreq = 800 + Math.sin(curTime * 12) * 300;
-        const scrape = (Math.random() * 2 - 1) * Math.sin(curTime * scrapeFreq * Math.PI * 2);
-        sample += scrape * 0.09;
-      }
-
-      // 4. Cedarwood Pencil Tap at 4.8s
-      if (curTime >= 4.8 && curTime < 5.0) {
-        const tapT = curTime - 4.8;
-        const tapWave = Math.sin(tapT * 2400 * Math.PI * 2) * Math.exp(-tapT * 45);
-        sample += tapWave * 0.35;
-      }
-
-      // 5. Hand-drawn strokes (7.5s - 14.5s)
-      if (curTime >= 7.5 && curTime < 14.5) {
-        const strokeEnv = Math.max(0, Math.sin(curTime * 6));
-        const strokeNoise = (Math.random() * 2 - 1) * 0.07 * strokeEnv;
-        sample += strokeNoise;
-      }
-
-      // 6. Dynamic Inversion 45Hz Sub-Bass Impact (14.5s)
-      if (curTime >= 14.5 && curTime < 17.5) {
-        const subT = curTime - 14.5;
-        const subSine = Math.sin(subT * 45 * Math.PI * 2) * Math.exp(-subT * 1.5);
-        const rumble = (Math.random() * 2 - 1) * 0.04 * Math.exp(-subT * 2.0);
-        sample += (subSine * 0.45 + rumble);
-      }
-
-      // 7. Tortillon Smudge Whisper (17.5s - 19.2s)
-      if (curTime >= 17.5 && curTime < 19.2) {
-        const smudgeT = curTime - 17.5;
-        const smudgeNoise = (Math.random() * 2 - 1) * 0.08 * Math.sin((smudgeT / 1.7) * Math.PI);
-        sample += smudgeNoise;
-      }
-
-      // 8. Final Hanko Seal Stamp Tap at 19.2s
-      if (curTime >= 19.2 && curTime < 19.5) {
-        const tapT = curTime - 19.2;
-        const stampWave = Math.sin(tapT * 1800 * Math.PI * 2) * Math.exp(-tapT * 50);
-        sample += stampWave * 0.4;
-      }
-
-      // Clamp to 16-bit PCM
-      sample = Math.max(-1, Math.min(1, sample));
-      view.setInt16(44 + i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-    }
-
-    // Convert to base64
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  };
-
-  // ==========================================
   // IN-BROWSER INTERACTIVE PLAYER
   // ==========================================
   let currentFrame = 0;
@@ -875,9 +643,6 @@
     }
     updateDisplay(parseInt(e.target.value, 10));
   });
-
-  // Initial draw
-  updateDisplay(0);
   </script>
 </body>
 </html>
