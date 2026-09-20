@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HORIZONS — Launch Video Player</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0E0D0C;
+      color: #F5F2EB;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-style: italic;
+      font-size: clamp(32px, 5vw, 54px);
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      color: #A09B90;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+    .player-card {
+      width: min(96vw, 1120px);
+      background: #181716;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+    video {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      display: block;
+      background: #000;
+      outline: none;
+    }
+    .footer {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .badge {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: #252321;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #E8E3D7;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .badge:hover {
+      background: #33302D;
+      border-color: #C26D53;
+      color: #FFF;
+    }
+    .badge-primary {
+      background: #C26D53;
+      color: #FFF;
+      border-color: #C26D53;
+    }
+    .badge-primary:hover {
+      background: #D47E64;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>H O R I Z O N S</h1>
+    <p class="subtitle">Launch Video · 1920×1080 · 24 FPS · 20.0s</p>
+  </div>
+
+  <div class="player-card">
+    <video controls autoplay loop playsinline poster="brag.jpg" src="brag.mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <div class="footer">
+    <a class="badge badge-primary" href="brag.mp4" download="horizons-launch.mp4">↓ Download MP4 (5.8 MB)</a>
+    <a class="badge" href="https://rahul-gembali.github.io/travel-template/" target="_blank">🌐 Live Website</a>
+    <a class="badge" href="https://github.com/Rahul-Gembali/travel-template" target="_blank">🐙 GitHub Repository</a>
+    <a class="badge" href="horizons-launch.html" target="_blank">🎨 Canvas 2D Film</a>
+  </div>
+
+</body>
+</html>
