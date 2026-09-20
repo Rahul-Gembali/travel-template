@@ -234,11 +234,6 @@
         targetCtx.globalAlpha = 0.35 + ease1 * 0.65;
         targetCtx.drawImage(images.hero, hx, hy, heroSize, heroSize);
         targetCtx.restore();
-
-        // 2H Contour Framing Box
-        targetCtx.strokeStyle = PAL.pencil2H;
-        targetCtx.lineWidth = 1.5;
-        targetCtx.strokeRect(hx - 10, hy - 10, heroSize + 20, heroSize + 20);
       }
     }
 
@@ -255,13 +250,11 @@
         const hx = W / 2 - heroSize / 2;
         const hy = 220;
 
-        // Draw Full Architectural Hero Art
+        // Soft organic paper shadow (no hard stroke border)
+        targetCtx.shadowColor = 'rgba(26, 25, 24, 0.08)';
+        targetCtx.shadowBlur = 24;
+        targetCtx.shadowOffsetY = 10;
         targetCtx.drawImage(images.hero, hx, hy, heroSize, heroSize);
-
-        // Tactile paper frame border
-        targetCtx.strokeStyle = PAL.pencil8B;
-        targetCtx.lineWidth = 2.0;
-        targetCtx.strokeRect(hx - 6, hy - 6, heroSize + 12, heroSize + 12);
         targetCtx.restore();
       }
 
@@ -297,32 +290,42 @@
     }
 
     // ----------------------------------------------------
-    // BEAT 3: Hand-Drawn Journey across 3 Masterpieces (7.5s - 14.5s)
+    // BEAT 3: Hand-Drawn Journey across 3 Masterpieces (7.5s - 14.6s)
+    // Smooth cross-fading without any artificial rectangular border
     // ----------------------------------------------------
     if (t >= 7.3 && t < 14.8) {
       targetCtx.save();
 
-      if (t < 9.9) {
-        // --- CHAPTER 1: KYOTO (7.5s - 9.8s) ---
-        const kp = clamp((t - 7.5) / 2.0, 0, 1);
-        const kEase = easeOutCubic(kp);
+      // Common dimensions for the 3 master artworks
+      const aw = 1120;
+      const ah = 630;
+      const ax = 120;
+      const ay = 250;
+
+      // 1. KYOTO: active 7.5s to 9.9s (fade in 7.5-7.9s, hold 7.9-9.5s, fade out 9.5-9.9s)
+      let kyotoAlpha = 0;
+      if (t >= 7.5 && t < 9.5) {
+        kyotoAlpha = clamp((t - 7.5) / 0.4, 0, 1);
+      } else if (t >= 9.5 && t < 9.9) {
+        kyotoAlpha = 1 - clamp((t - 9.5) / 0.4, 0, 1);
+      }
+
+      if (kyotoAlpha > 0) {
+        const kEase = easeOutCubic(clamp((t - 7.5) / 1.8, 0, 1));
+        const curY = ay - (1 - kEase) * 15;
+
+        targetCtx.save();
+        targetCtx.globalAlpha = kyotoAlpha;
 
         if (images.kyoto) {
-          // Cinematic slow pan across the 5-story pagoda
-          const kw = 1120;
-          const kh = 630;
-          const kx = 120;
-          const ky = 260 - (1 - kEase) * 25;
-
-          targetCtx.save();
-          targetCtx.drawImage(images.kyoto, kx, ky, kw, kh);
-          targetCtx.strokeStyle = PAL.pencil8B;
-          targetCtx.lineWidth = 1.5;
-          targetCtx.strokeRect(kx, ky, kw, kh);
-          targetCtx.restore();
+          targetCtx.shadowColor = 'rgba(26, 25, 24, 0.08)';
+          targetCtx.shadowBlur = 24;
+          targetCtx.shadowOffsetY = 10;
+          targetCtx.drawImage(images.kyoto, ax, curY, aw, ah);
+          targetCtx.shadowColor = 'transparent';
         }
 
-        // Editorial Typography & Sumi-e Seal
+        // Typography
         targetCtx.fillStyle = PAL.pencil8B;
         targetCtx.font = 'italic 700 58px "Instrument Serif", Georgia, serif';
         targetCtx.fillText('京都 · KYOTO', 1300, 420);
@@ -339,28 +342,34 @@
         targetCtx.font = '12px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.pencil4B;
         targetCtx.fillText('[ SEI — SACRED QUIETUDE ]', 1300, 660);
+
+        targetCtx.restore();
       }
-      else if (t < 12.2) {
-        // --- CHAPTER 2: OAXACA (9.8s - 12.1s) ---
-        const op = clamp((t - 9.8) / 2.0, 0, 1);
-        const oEase = easeOutCubic(op);
+
+      // 2. OAXACA: active 9.6s to 12.2s (fade in 9.6-10.0s, hold 10.0-11.8s, fade out 11.8-12.2s)
+      let oaxacaAlpha = 0;
+      if (t >= 9.6 && t < 11.8) {
+        oaxacaAlpha = clamp((t - 9.6) / 0.4, 0, 1);
+      } else if (t >= 11.8 && t < 12.2) {
+        oaxacaAlpha = 1 - clamp((t - 11.8) / 0.4, 0, 1);
+      }
+
+      if (oaxacaAlpha > 0) {
+        const oEase = easeOutCubic(clamp((t - 9.8) / 1.8, 0, 1));
+        const curY = ay - (1 - oEase) * 15;
+
+        targetCtx.save();
+        targetCtx.globalAlpha = oaxacaAlpha;
 
         if (images.oaxaca) {
-          // Colonial Courtyard Arches & Smoking Comal
-          const ow = 1120;
-          const oh = 630;
-          const ox = 120;
-          const oy = 260 - (1 - oEase) * 25;
-
-          targetCtx.save();
-          targetCtx.drawImage(images.oaxaca, ox, oy, ow, oh);
-          targetCtx.strokeStyle = PAL.pencil8B;
-          targetCtx.lineWidth = 1.5;
-          targetCtx.strokeRect(ox, oy, ow, oh);
-          targetCtx.restore();
+          targetCtx.shadowColor = 'rgba(26, 25, 24, 0.08)';
+          targetCtx.shadowBlur = 24;
+          targetCtx.shadowOffsetY = 10;
+          targetCtx.drawImage(images.oaxaca, ax, curY, aw, ah);
+          targetCtx.shadowColor = 'transparent';
         }
 
-        // Editorial Typography
+        // Typography
         targetCtx.fillStyle = PAL.pencil8B;
         targetCtx.font = 'italic 700 58px "Instrument Serif", Georgia, serif';
         targetCtx.fillText('OAXACA DE JUÁREZ', 1300, 420);
@@ -370,33 +379,38 @@
         targetCtx.fillText('EARTHEN SMOKE & COPAL RESIN', 1300, 470);
         targetCtx.fillText('ARTISAN STONE & CLAY GUILDS', 1300, 495);
 
-        // Botanical Agave Specimen Telemetry
         targetCtx.font = '13px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.terracottaHanko;
         targetCtx.fillText('SPECIMEN: AGAVE POTATORUM', 1300, 610);
         targetCtx.fillText('KILN FIRING: 980°C / RED EARTH', 1300, 635);
+
+        targetCtx.restore();
       }
-      else {
-        // --- CHAPTER 3: BERGEN (12.1s - 14.5s) ---
-        const bp = clamp((t - 12.1) / 2.0, 0, 1);
-        const bEase = easeOutCubic(bp);
+
+      // 3. BERGEN: active 11.9s to 14.6s (fade in 11.9-12.3s, hold 12.3-14.2s, fade out 14.2-14.6s)
+      let bergenAlpha = 0;
+      if (t >= 11.9 && t < 14.2) {
+        bergenAlpha = clamp((t - 11.9) / 0.4, 0, 1);
+      } else if (t >= 14.2 && t < 14.6) {
+        bergenAlpha = 1 - clamp((t - 14.2) / 0.4, 0, 1);
+      }
+
+      if (bergenAlpha > 0) {
+        const bEase = easeOutCubic(clamp((t - 12.1) / 1.8, 0, 1));
+        const curY = ay - (1 - bEase) * 15;
+
+        targetCtx.save();
+        targetCtx.globalAlpha = bergenAlpha;
 
         if (images.bergen) {
-          // Historic Hanseatic Timber Wharf & Fjord Water
-          const bw = 1120;
-          const bh = 630;
-          const bx = 120;
-          const by = 260 - (1 - bEase) * 25;
-
-          targetCtx.save();
-          targetCtx.drawImage(images.bergen, bx, by, bw, bh);
-          targetCtx.strokeStyle = PAL.pencil8B;
-          targetCtx.lineWidth = 1.5;
-          targetCtx.strokeRect(bx, by, bw, bh);
-          targetCtx.restore();
+          targetCtx.shadowColor = 'rgba(26, 25, 24, 0.08)';
+          targetCtx.shadowBlur = 24;
+          targetCtx.shadowOffsetY = 10;
+          targetCtx.drawImage(images.bergen, ax, curY, aw, ah);
+          targetCtx.shadowColor = 'transparent';
         }
 
-        // Editorial Typography
+        // Typography
         targetCtx.fillStyle = PAL.pencil8B;
         targetCtx.font = 'italic 700 58px "Instrument Serif", Georgia, serif';
         targetCtx.fillText('BERGEN · FJORD MIST', 1300, 420);
@@ -406,11 +420,12 @@
         targetCtx.fillText('HANSEATIC TIMBER WHARF', 1300, 470);
         targetCtx.fillText('MARITIME RAIN & PINE RIDGES', 1300, 495);
 
-        // Coordinates
         targetCtx.font = '13px "JetBrains Mono", monospace';
         targetCtx.fillStyle = PAL.ochreAccent;
         targetCtx.fillText('LAT. 60.3929° N / 5.3241° E', 1300, 610);
         targetCtx.fillText('PRECIPITATION: 240 DAYS / SLOW FOG', 1300, 635);
+
+        targetCtx.restore();
       }
 
       targetCtx.restore();
@@ -419,7 +434,7 @@
     // ----------------------------------------------------
     // BEAT 4: Dynamic Slate Inversion (14.5s - 17.5s)
     // ----------------------------------------------------
-    if (t >= 14.2 && t < 17.8) {
+    if (t >= 14.3 && t < 17.8) {
       const invP = clamp((t - 14.5) / 2.5, 0, 1);
       const invEase = easeInOutCubic(invP);
 
