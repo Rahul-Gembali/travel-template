@@ -1,0 +1,48 @@
+# HORIZONS — Launch Share Copy
+
+## 𝕏 / Twitter Post
+Most travel websites look like booking portals designed by committee: frantic countdowns, garish discount badges, and sterile stock photography.
+
+We built HORIZONS differently.
+
+A slow travel monograph and living guide pairing architectural restraint with curated stays, artisan workshops, and seasonal telemetry across Kyoto, Oaxaca, Tbilisi, Lisbon, Cape Town, and Bergen.
+
+Built with tactile graphite physics, editorial typography, and zero AI-slop.
+
+Explore the live release: https://rahul-gembali.github.io/travel-template/
+Open source code on GitHub: https://github.com/Rahul-Gembali/travel-template
+
+#webdesign #slowtravel #frontend #minimalism #designsystem
+
+---
+
+## LinkedIn Post
+In an era dominated by rapid-fire tourism and homogenized digital experiences, we wanted to build something that honors stillness, craftsmanship, and architectural restraint.
+
+Introducing HORIZONS: A Slow Travel Guide & Living Digital Monograph.
+
+Key Design & Engineering Principles:
+• Substrate Tactility: An analog design system inspired by 640gsm cold-press cotton rag paper and 2H–9B graphite drafting.
+• Sumi-e (墨絵) Philosophy: Embracing Ma (sacred negative space), intentional pacing, and wabi-sabi imperfections.
+• Living Telemetry: Real-time seasonal weather metrics, pace dials, and quiet retreat curation across six global citadels.
+• Production Performance: Zero external bloated frameworks, 60fps buttery smooth transitions, and seamless mobile responsiveness.
+
+Explore the live release:
+https://rahul-gembali.github.io/travel-template/
+
+Source code & architecture breakdown on GitHub:
+https://github.com/Rahul-Gembali/travel-template
+
+---
+
+## Product Hunt / Show HN
+**Name**: HORIZONS — Slow Travel Guide & Living Monograph
+**Tagline**: Where stillness meets the horizon. An architectural slow travel guide with tactile graphite aesthetics.
+
+**Description**:
+HORIZONS is an antidote to the frantic checklist mentality of modern tourism. Designed as a living digital monograph, it pairs editorial typography with tactile graphite aesthetics to showcase mindful citadels across Kyoto, Oaxaca, Tbilisi, Lisbon, Cape Town, and Bergen.
+
+Featuring living weather telemetry, artisan guild directories, and quiet retreat guides, all engineered with high-performance CSS and silky GSAP-inspired motion curves.
+
+Live demo: https://rahul-gembali.github.io/travel-template/
+GitHub: https://github.com/Rahul-Gembali/travel-template
